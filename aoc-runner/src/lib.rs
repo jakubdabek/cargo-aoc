@@ -36,8 +36,8 @@ impl Borrow<Arc<str>> for ArcStr {
     }
 }
 
-pub trait Runner {
-    fn gen(input: ArcStr) -> Self
+pub trait Runner<'input> {
+    fn gen(input: &'input ArcStr) -> Self
     where
         Self: Sized;
 
@@ -45,7 +45,7 @@ pub trait Runner {
 
     fn bench(&self, black_box: fn(&dyn Display));
 
-    fn try_gen(input: ArcStr) -> Result<Self, Box<dyn Error>>
+    fn try_gen(input: &'input ArcStr) -> Result<Self, Box<dyn Error>>
     where
         Self: Sized,
     {

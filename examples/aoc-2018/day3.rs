@@ -3,9 +3,10 @@ use fnv::FnvHashSet;
 use std::error::Error;
 
 #[derive(Debug, Eq, PartialEq)]
-struct Claim {
+struct Claim<'a> {
     id: u32,
     rect: Rectangle,
+    line: &'a str,
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -42,7 +43,7 @@ impl Rectangle {
 }
 
 #[aoc_generator(day3)]
-fn parse(input: &str) -> Result<Vec<Claim>, Box<dyn Error>> {
+fn parse<'input>(input: &'input str) -> Result<Vec<Claim<'input>>, Box<dyn Error>> {
     input
         .lines()
         .map(|l| {
@@ -70,13 +71,14 @@ fn parse(input: &str) -> Result<Vec<Claim>, Box<dyn Error>> {
                     width,
                     height,
                 },
+                line: l,
             })
         })
         .collect()
 }
 
 #[aoc(day3, part1)]
-fn part1(claims: &[Claim]) -> usize {
+fn part1(claims: &[Claim<'_>]) -> usize {
     let mut overlaps = FnvHashSet::default();
 
     for (i, claim) in claims.iter().enumerate() {
@@ -95,7 +97,7 @@ fn part1(claims: &[Claim]) -> usize {
 }
 
 #[aoc(day3, part2)]
-fn part2(claims: &[Claim]) -> Option<u32> {
+fn part2(claims: &[Claim<'_>]) -> Option<u32> {
     claims.iter().find_map(|c| {
         if claims
             .iter()
@@ -122,6 +124,7 @@ mod tests {
             width: 4,
             height: 4,
         },
+        line: "#1 @ 1,3: 4x4",
     };
     const CLAIM_2: Claim = Claim {
         id: 2,
@@ -131,6 +134,7 @@ mod tests {
             width: 4,
             height: 4,
         },
+        line: "#2 @ 3,1: 4x4",
     };
     const CLAIM_3: Claim = Claim {
         id: 3,
@@ -140,6 +144,7 @@ mod tests {
             width: 2,
             height: 2,
         },
+        line: "#3 @ 5,5: 2x2",
     };
 
     #[test]

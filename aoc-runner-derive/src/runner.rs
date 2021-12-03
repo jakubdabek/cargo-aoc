@@ -63,18 +63,20 @@ pub fn runner_impl(args: pm::TokenStream, input: pm::TokenStream) -> pm::TokenSt
             let gen_out_t = &generator.get_out_t();
 
             quote! {
-                pub struct RunnerStruct {
+                pub struct RunnerStruct<'input> {
                     input: #gen_out_t,
                     output: PhantomData<#out_t>,
+                    _input_lifetime: PhantomData<&'input ()>,
                 }
 
                 #derive
             }
         } else {
             quote! {
-                pub struct RunnerStruct {
+                pub struct RunnerStruct<'input> {
                     input: ArcStr,
                     output: PhantomData<#out_t>,
+                    _input_lifetime: PhantomData<&'input ()>,
                 }
 
                 #derive
@@ -99,7 +101,7 @@ pub fn runner_impl(args: pm::TokenStream, input: pm::TokenStream) -> pm::TokenSt
             use crate::{Factory, #trait_name};
 
             impl #trait_name for Factory {
-                fn #mod_name(input: ArcStr) -> Result<Box<dyn Runner>, Box<dyn Error>> {
+                fn #mod_name<'input>(input: &'input ArcStr) -> Result<Box<dyn Runner<'input> + 'input>, Box<dyn Error>> {
                     Ok(Box::new( RunnerStruct::try_gen(input)? ))
                 }
             }
@@ -116,7 +118,7 @@ fn build_derive(solver: &Solver, generator: Option<&Generator>) -> pm2::TokenStr
     let input = if let Some(generator) = generator {
         let fn_generator = generator.get_name();
         quote! {
-            input: #fn_generator(input.borrow())
+            #fn_generator(input.borrow())
         }
     } else {
         quote! {
@@ -131,23 +133,25 @@ fn build_derive(solver: &Solver, generator: Option<&Generator>) -> pm2::TokenStr
         };
 
         quote! {
-            fn gen(input: ArcStr) -> Self {
+            fn gen(input: &'input ArcStr) -> Self {
                 Self::try_gen(input).expect("failed to generate input")
             }
 
-            fn try_gen(input: ArcStr) -> Result<Self, Box<dyn Error>> {
+            fn try_gen(input: &'input ArcStr) -> Result<Self, Box<dyn Error>> {
                 Ok( RunnerStruct {
-                    #input,
+                    input: #input,
                     output: PhantomData,
+                    _input_lifetime: PhantomData,
                 } )
             }
         }
     } else {
         quote! {
-            fn gen(input: ArcStr) -> Self {
+            fn gen(input: &'input ArcStr) -> Self {
                 RunnerStruct {
-                    #input,
+                    input: #input .clone(),
                     output: PhantomData,
+                    _input_lifetime: PhantomData,
                 }
             }
         }
@@ -187,7 +191,7 @@ fn build_derive(solver: &Solver, generator: Option<&Generator>) -> pm2::TokenStr
     };
 
     quote! {
-        impl Runner for RunnerStruct {
+        impl<'input> Runner<'input> for RunnerStruct<'input> {
             #gen
 
             #run

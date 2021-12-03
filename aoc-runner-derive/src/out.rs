@@ -71,7 +71,7 @@ fn headers(map: &InnerMap, year: u32) -> pm2::TokenStream {
             quote! {
                 #[doc(hidden)]
                 pub trait #camel {
-                    fn #snake(input: ArcStr) -> Result<Box<dyn Runner>, Box<dyn Error>>;
+                    fn #snake<'input>(input: &'input ArcStr) -> Result<Box<dyn Runner<'input> + 'input>, Box<dyn Error>>;
                 }
             }
         })
@@ -143,7 +143,7 @@ fn body(infos: &DayParts, lib: Option<pm2::Ident>) -> pm2::TokenStream {
             {
                 let start_time = Instant::now();
 
-                match Factory::#identifier(#input.clone()) {
+                let _ = match Factory::#identifier(& #input) {
                     Ok(runner) => {
                         let inter_time = Instant::now();
 
@@ -156,7 +156,7 @@ fn body(infos: &DayParts, lib: Option<pm2::Ident>) -> pm2::TokenStream {
                         }
                     },
                     Err(e) => eprintln!(#err, "generating", e)
-                }
+                };
             }
         }
     }).collect();
