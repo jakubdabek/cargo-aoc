@@ -2,7 +2,7 @@
     {
         let start_time = Instant::now();
 
-        match Factory::{RUNNER_NAME}(input_day{DAY}.clone()) {
+        let _ = match Factory::{RUNNER_NAME}(&input_day{DAY}) {
             Ok(runner) => {
                 let inter_time = Instant::now();
 
@@ -15,5 +15,5 @@
                 }
             },
             Err(e) => eprintln!("{RUNNER_DISPLAY} : FAILED while generating :\n{:#?}\n", e)
-        }
+        };
     }
