@@ -159,9 +159,9 @@ impl AOCApp {
         .replace(
             "{PROFILE}",
             if args.is_present("profile") {
-                "[profile.release]\ndebug = true"
+                "[profile.release]\ndebug = true\noverflow-checks = true"
             } else {
-                ""
+                "[profile.release]\noverflow-checks = true"
             },
         );
 
